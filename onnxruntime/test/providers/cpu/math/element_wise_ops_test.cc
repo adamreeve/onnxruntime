@@ -1787,6 +1787,29 @@ TEST(MathOpTest, Min_12_MLFloat16_Scalar1) {
   test.Run(OpTester::ExpectResult::kExpectSuccess, "", {kTensorrtExecutionProvider});  // TensorRT: Input batch size is inconsistent
 }
 
+TEST(MathOpTest, Min_12_MLFloat16_Nan) {
+  OpTester test("Min", 12);
+  test.AddInput<MLFloat16>("data_2", {3, 3},
+                           MakeMLFloat16({std::numeric_limits<float>::quiet_NaN(),
+                                          std::numeric_limits<float>::quiet_NaN(),
+                                          std::numeric_limits<float>::quiet_NaN(),
+                                          -0.5f, 0.0f, -2.0f,
+                                          0.5f, 0.0f, 2.0f}));
+  test.AddInput<MLFloat16>("data_1", {3, 1},
+                           MakeMLFloat16({0.0f, -1.0f, 1.0f}));
+  test.AddOutput<MLFloat16>("min", {3, 3},
+                            MakeMLFloat16({std::numeric_limits<float>::quiet_NaN(),
+                                           std::numeric_limits<float>::quiet_NaN(),
+                                           std::numeric_limits<float>::quiet_NaN(),
+                                           -1.0f, -1.0f, -2.0f,
+                                           0.5f, 0.0f, 1.0f}));
+  if (nullptr != DefaultCpuExecutionProvider()) {
+    std::vector<std::unique_ptr<IExecutionProvider>> execution_providers;
+    execution_providers.push_back(DefaultCpuExecutionProvider());
+    test.Run(OpTester::ExpectResult::kExpectSuccess, "", {}, nullptr, &execution_providers);
+  }
+}
+
 TEST(MathOpTest, Max_6) {
   OpTester test("Max", 6);
   std::vector<int64_t> dims{3, 3};
